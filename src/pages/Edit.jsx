@@ -4,6 +4,8 @@ import axios from 'axios';
 import { backendUrl } from '../App';
 import { toast } from 'react-toastify';
 import { useParams, useNavigate } from 'react-router-dom';
+import { CKEditor } from '@ckeditor/ckeditor5-react';
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 
 const Edit = ({ token }) => {
   const { id } = useParams();
@@ -20,12 +22,12 @@ const Edit = ({ token }) => {
   const [category, setCategory] = useState('');
   const [subCategory, setSubCategory] = useState('');
   const [bestseller, setBestseller] = useState(false);
-  const [sizes, setSizes] = useState([]);
   const [categories, setCategories] = useState([]);
   const [subCategories, setSubCategories] = useState([]);
   const [filteredSubCategories, setFilteredSubCategories] = useState([]);
   const [variants, setVariants] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchProduct();
@@ -51,7 +53,6 @@ const Edit = ({ token }) => {
         setCategory(product.category._id);
         setSubCategory(product.subCategory._id);
         setBestseller(product.bestseller);
-        setSizes(product.sizes);
         setVariants(product.variants || []);
         setExistingImages(product.image);
       }
@@ -90,6 +91,7 @@ const Edit = ({ token }) => {
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     try {
       const formData = new FormData();
@@ -101,7 +103,6 @@ const Edit = ({ token }) => {
       formData.append('category', category);
       formData.append('subCategory', subCategory);
       formData.append('bestseller', bestseller);
-      formData.append('sizes', JSON.stringify(sizes));
       formData.append('variants', JSON.stringify(variants));
 
       image1 && formData.append('image1', image1);
@@ -122,6 +123,8 @@ const Edit = ({ token }) => {
     } catch (error) {
       console.log(error);
       toast.error(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -196,12 +199,23 @@ const Edit = ({ token }) => {
 
       <div className='w-full'>
         <p className='mb-2'>Product description</p>
-        <textarea
-          onChange={(e) => setDescription(e.target.value)}
-          value={description}
-          className='w-full max-w-[500px] px-3 py-2 border'
-          placeholder='Write content here'
-          required
+        <CKEditor
+          editor={ClassicEditor}
+          data={description}
+          onChange={(event, editor) => {
+            const data = editor.getData();
+            setDescription(data);
+          }}
+          config={{
+            toolbar: [
+              'heading', '|',
+              'bold', 'italic', 'link', '|',
+              'bulletedList', 'numberedList', '|',
+              'outdent', 'indent', '|',
+              'blockQuote', 'insertTable', '|',
+              'undo', 'redo'
+            ]
+          }}
         />
       </div>
 
@@ -324,9 +338,20 @@ const Edit = ({ token }) => {
         </label>
       </div>
 
-      <button type='submit' className='w-32 py-3 mt-4 bg-black text-white'>
-        UPDATE
+      <button type='submit' className='w-32 py-3 mt-4 bg-black text-white' disabled={loading}>
+        {loading ? 'Updating...' : 'UPDATE'}
       </button>
+
+      {/* Loader Overlay */}
+      {loading && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+          <div className='bg-white p-6 rounded-lg flex flex-col items-center gap-3'>
+            <div className='w-12 h-12 border-4 border-gray-300 border-t-black rounded-full animate-spin'></div>
+            <p className='text-lg font-semibold'>Updating Product...</p>
+            <p className='text-sm text-gray-600'>Please wait while uploading images</p>
+          </div>
+        </div>
+      )}
     </form>
   );
 };

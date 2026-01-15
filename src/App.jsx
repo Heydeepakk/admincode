@@ -10,6 +10,7 @@ import Attribute from './pages/Attribute'
 import Edit from './pages/Edit'
 import Header from './pages/Header'
 import Banner from './pages/Banner'
+import AboutUs from './pages/AboutUs'
 import Login from './components/Login'
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -45,6 +46,7 @@ const App = () => {
                 <Route path='/attribute' element={<Attribute token={token} />} />
                 <Route path='/header' element={<Header token={token} />} />
                 <Route path='/banner' element={<Banner token={token} />} />
+                <Route path='/about' element={<AboutUs token={token} />} />
               </Routes>
             </div>
           </div>
