@@ -5,6 +5,11 @@ import { Routes, Route } from 'react-router-dom'
 import Add from './pages/Add'
 import List from './pages/List'
 import Orders from './pages/Orders'
+import Category from './pages/Category'
+import Attribute from './pages/Attribute'
+import Edit from './pages/Edit'
+import Header from './pages/Header'
+import Banner from './pages/Banner'
 import Login from './components/Login'
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -34,7 +39,12 @@ const App = () => {
               <Routes>
                 <Route path='/add' element={<Add token={token} />} />
                 <Route path='/list' element={<List token={token} />} />
+                <Route path='/edit/:id' element={<Edit token={token} />} />
                 <Route path='/orders' element={<Orders token={token} />} />
+                <Route path='/category' element={<Category token={token} />} />
+                <Route path='/attribute' element={<Attribute token={token} />} />
+                <Route path='/header' element={<Header token={token} />} />
+                <Route path='/banner' element={<Banner token={token} />} />
               </Routes>
             </div>
           </div>

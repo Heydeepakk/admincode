@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {assets} from '../assets/assets'
 import axios from 'axios'
 import { backendUrl } from '../App'
@@ -14,13 +14,119 @@ const Add = ({token}) => {
    const [name, setName] = useState("");
    const [description, setDescription] = useState("");
    const [price, setPrice] = useState("");
-   const [category, setCategory] = useState("Men");
-   const [subCategory, setSubCategory] = useState("Topwear");
+   const [category, setCategory] = useState("");
+   const [subCategory, setSubCategory] = useState("");
    const [bestseller, setBestseller] = useState(false);
    const [sizes, setSizes] = useState([]);
+   const [categories, setCategories] = useState([]);
+   const [subCategories, setSubCategories] = useState([]);
+   const [filteredSubCategories, setFilteredSubCategories] = useState([]);
+   const [attributes, setAttributes] = useState([]);
+   const [variants, setVariants] = useState([]);
+   const [loading, setLoading] = useState(false);
+
+   useEffect(() => {
+     fetchCategories();
+     fetchSubCategories();
+     fetchAttributes();
+   }, []);
+
+   useEffect(() => {
+     if (category) {
+       const filtered = subCategories.filter(sub => sub.categoryId._id === category);
+       setFilteredSubCategories(filtered);
+       setSubCategory('');
+     }
+   }, [category, subCategories]);
+
+   useEffect(() => {
+     if (subCategory) {
+       generateVariants();
+     } else {
+       setVariants([]);
+     }
+   }, [subCategory, attributes]);
+
+   const fetchCategories = async () => {
+     try {
+       const response = await axios.get(backendUrl + '/api/category/list');
+       if (response.data.success) {
+         setCategories(response.data.categories);
+       }
+     } catch (error) {
+       toast.error(error.message);
+     }
+   };
+
+   const fetchSubCategories = async () => {
+     try {
+       const response = await axios.get(backendUrl + '/api/subcategory/list');
+       if (response.data.success) {
+         setSubCategories(response.data.subCategories);
+       }
+     } catch (error) {
+       toast.error(error.message);
+     }
+   };
+
+   const fetchAttributes = async () => {
+     try {
+       const response = await axios.get(backendUrl + '/api/attribute/list');
+       if (response.data.success) {
+         setAttributes(response.data.attributes);
+       }
+     } catch (error) {
+       toast.error(error.message);
+     }
+   };
+
+   const generateVariants = () => {
+     const subCategoryAttributes = attributes.filter(attr => attr.subCategoryId?._id === subCategory);
+     
+     if (subCategoryAttributes.length === 0) {
+       setVariants([]);
+       return;
+     }
+
+     // Generate all combinations
+     const combinations = [];
+     const generate = (index, current) => {
+       if (index === subCategoryAttributes.length) {
+         combinations.push([...current]);
+         return;
+       }
+       
+       const attr = subCategoryAttributes[index];
+       for (const variant of attr.variants) {
+         generate(index + 1, [...current, {
+           attributeId: attr._id,
+           attributeName: attr.name,
+           variantValue: variant.value
+         }]);
+       }
+     };
+     
+     generate(0, []);
+     
+     const variantsWithPriceQty = combinations.map(combo => ({
+       attributes: combo,
+       price: price || 0,
+       quantity: 0,
+       sku: ''
+     }));
+     
+     setVariants(variantsWithPriceQty);
+   };
+
+   const updateVariant = (index, field, value) => {
+     const updated = [...variants];
+     updated[index][field] = field === 'price' || field === 'quantity' ? Number(value) : value;
+     setVariants(updated);
+   };
 
    const onSubmitHandler = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     try {
       
@@ -33,6 +139,7 @@ const Add = ({token}) => {
       formData.append("subCategory",subCategory)
       formData.append("bestseller",bestseller)
       formData.append("sizes",JSON.stringify(sizes))
+      formData.append("variants",JSON.stringify(variants))
 
       image1 && formData.append("image1",image1)
       image2 && formData.append("image2",image2)
@@ -50,6 +157,10 @@ const Add = ({token}) => {
         setImage3(false)
         setImage4(false)
         setPrice('')
+        setCategory('')
+        setSubCategory('')
+        setSizes([])
+        setVariants([])
       } else {
         toast.error(response.data.message)
       }
@@ -57,6 +168,8 @@ const Add = ({token}) => {
     } catch (error) {
       console.log(error);
       toast.error(error.message)
+    } finally {
+      setLoading(false);
     }
    }
 
@@ -99,30 +212,32 @@ const Add = ({token}) => {
 
             <div>
               <p className='mb-2'>Product category</p>
-              <select onChange={(e) => setCategory(e.target.value)} className='w-full px-3 py-2'>
-                  <option value="Men">Men</option>
-                  <option value="Women">Women</option>
-                  <option value="Kids">Kids</option>
+              <select value={category} onChange={(e) => setCategory(e.target.value)} className='w-full px-3 py-2' required>
+                  <option value="">Select Category</option>
+                  {categories.map(cat => (
+                    <option key={cat._id} value={cat._id}>{cat.name}</option>
+                  ))}
               </select>
             </div>
 
             <div>
               <p className='mb-2'>Sub category</p>
-              <select onChange={(e) => setSubCategory(e.target.value)} className='w-full px-3 py-2'>
-                  <option value="Topwear">Topwear</option>
-                  <option value="Bottomwear">Bottomwear</option>
-                  <option value="Winterwear">Winterwear</option>
+              <select value={subCategory} onChange={(e) => setSubCategory(e.target.value)} className='w-full px-3 py-2' required disabled={!category}>
+                  <option value="">Select SubCategory</option>
+                  {filteredSubCategories.map(subCat => (
+                    <option key={subCat._id} value={subCat._id}>{subCat.name}</option>
+                  ))}
               </select>
             </div>
 
             <div>
-              <p className='mb-2'>Product Price</p>
-              <input onChange={(e) => setPrice(e.target.value)} value={price} className='w-full px-3 py-2 sm:w-[120px]' type="Number" placeholder='25' />
+              <p className='mb-2'>Base Price</p>
+              <input onChange={(e) => setPrice(e.target.value)} value={price} className='w-full px-3 py-2 sm:w-[120px]' type="Number" placeholder='25' required/>
             </div>
 
         </div>
 
-        <div>
+        {/* <div>
           <p className='mb-2'>Product Sizes</p>
           <div className='flex gap-3'>
             <div onClick={()=>setSizes(prev => prev.includes("S") ? prev.filter( item => item !== "S") : [...prev,"S"])}>
@@ -145,14 +260,85 @@ const Add = ({token}) => {
               <p className={`${sizes.includes("XXL") ? "bg-pink-100" : "bg-slate-200" } px-3 py-1 cursor-pointer`}>XXL</p>
             </div>
           </div>
-        </div>
+        </div> */}
+
+        {/* Variants Section */}
+        {variants.length > 0 && (
+          <div className='w-full mt-4'>
+            <p className='mb-3 text-lg font-semibold'>Product Variants (Price & Quantity)</p>
+            <div className='border rounded p-4 bg-gray-50 max-h-96 overflow-y-auto'>
+              <div className='grid gap-3'>
+                {variants.map((variant, index) => (
+                  <div key={index} className='flex items-center gap-3 bg-white p-3 rounded border'>
+                    <div className='flex-1'>
+                      <div className='flex gap-2 flex-wrap'>
+                        {variant.attributes.map((attr, i) => (
+                          <span key={i} className='text-sm bg-blue-100 px-2 py-1 rounded'>
+                            {attr.attributeName}: <strong>{attr.variantValue}</strong>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className='flex gap-2'>
+                      <div>
+                        <label className='text-xs text-gray-600'>Price</label>
+                        <input
+                          type='number'
+                          value={variant.price}
+                          onChange={(e) => updateVariant(index, 'price', e.target.value)}
+                          className='w-24 px-2 py-1 border rounded text-sm'
+                          placeholder='Price'
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className='text-xs text-gray-600'>Quantity</label>
+                        <input
+                          type='number'
+                          value={variant.quantity}
+                          onChange={(e) => updateVariant(index, 'quantity', e.target.value)}
+                          className='w-24 px-2 py-1 border rounded text-sm'
+                          placeholder='Qty'
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className='text-xs text-gray-600'>SKU</label>
+                        <input
+                          type='text'
+                          value={variant.sku}
+                          onChange={(e) => updateVariant(index, 'sku', e.target.value)}
+                          className='w-28 px-2 py-1 border rounded text-sm'
+                          placeholder='SKU'
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className='flex gap-2 mt-2'>
           <input onChange={() => setBestseller(prev => !prev)} checked={bestseller} type="checkbox" id='bestseller' />
           <label className='cursor-pointer' htmlFor="bestseller">Add to bestseller</label>
         </div>
 
-        <button type="submit" className='w-28 py-3 mt-4 bg-black text-white'>ADD</button>
+        <button type="submit" className='w-28 py-3 mt-4 bg-black text-white' disabled={loading}>
+          {loading ? 'Adding...' : 'ADD'}
+        </button>
+
+        {/* Loader Overlay */}
+        {loading && (
+          <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+            <div className='bg-white p-6 rounded-lg flex flex-col items-center gap-3'>
+              <div className='w-12 h-12 border-4 border-gray-300 border-t-black rounded-full animate-spin'></div>
+              <p className='text-lg font-semibold'>Adding Product...</p>
+              <p className='text-sm text-gray-600'>Please wait while uploading images</p>
+            </div>
+          </div>
+        )}
 
     </form>
   )
