@@ -8,12 +8,14 @@ const Header = ({ token }) => {
   const [logo, setLogo] = useState(false)
   const [currentHeader, setCurrentHeader] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [fetchLoading, setFetchLoading] = useState(false)
 
   useEffect(() => {
     fetchHeader()
   }, [])
 
   const fetchHeader = async () => {
+    setFetchLoading(true)
     try {
       const response = await axios.get(backendUrl + '/api/header/get')
       if (response.data.success && response.data.data) {
@@ -21,6 +23,8 @@ const Header = ({ token }) => {
       }
     } catch (error) {
       console.log(error)
+    } finally {
+      setFetchLoading(false)
     }
   }
 
@@ -82,6 +86,17 @@ const Header = ({ token }) => {
           {loading ? 'Saving...' : currentHeader ? 'UPDATE LOGO' : 'ADD LOGO'}
         </button>
       </form>
+
+      {/* Loading Overlay */}
+      {(fetchLoading || loading) && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+          <div className='bg-white p-6 rounded-lg flex flex-col items-center gap-3'>
+            <div className='w-12 h-12 border-4 border-gray-300 border-t-black rounded-full animate-spin'></div>
+            <p className='text-lg font-semibold'>{fetchLoading ? 'Loading Header...' : 'Saving Logo...'}</p>
+            {loading && <p className='text-sm text-gray-600'>Please wait while uploading logo</p>}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -28,6 +28,7 @@ const Edit = ({ token }) => {
   const [variants, setVariants] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(false);
 
   useEffect(() => {
     fetchProduct();
@@ -43,6 +44,7 @@ const Edit = ({ token }) => {
   }, [category, subCategories]);
 
   const fetchProduct = async () => {
+    setFetchLoading(true)
     try {
       const response = await axios.post(backendUrl + '/api/product/single', { productId: id });
       if (response.data.success) {
@@ -58,10 +60,13 @@ const Edit = ({ token }) => {
       }
     } catch (error) {
       toast.error(error.message);
+    } finally {
+      setFetchLoading(false)
     }
   };
 
   const fetchCategories = async () => {
+    setFetchLoading(true)
     try {
       const response = await axios.get(backendUrl + '/api/category/list');
       if (response.data.success) {
@@ -69,10 +74,13 @@ const Edit = ({ token }) => {
       }
     } catch (error) {
       toast.error(error.message);
+    } finally {
+      setFetchLoading(false)
     }
   };
 
   const fetchSubCategories = async () => {
+    setFetchLoading(true)
     try {
       const response = await axios.get(backendUrl + '/api/subcategory/list');
       if (response.data.success) {
@@ -80,6 +88,8 @@ const Edit = ({ token }) => {
       }
     } catch (error) {
       toast.error(error.message);
+    } finally {
+      setFetchLoading(false)
     }
   };
 
@@ -343,12 +353,12 @@ const Edit = ({ token }) => {
       </button>
 
       {/* Loader Overlay */}
-      {loading && (
+      {(fetchLoading || loading) && (
         <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
           <div className='bg-white p-6 rounded-lg flex flex-col items-center gap-3'>
             <div className='w-12 h-12 border-4 border-gray-300 border-t-black rounded-full animate-spin'></div>
-            <p className='text-lg font-semibold'>Updating Product...</p>
-            <p className='text-sm text-gray-600'>Please wait while uploading images</p>
+            <p className='text-lg font-semibold'>{fetchLoading ? 'Loading Product...' : 'Updating Product...'}</p>
+            {loading && <p className='text-sm text-gray-600'>Please wait while uploading images</p>}
           </div>
         </div>
       )}

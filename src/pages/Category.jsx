@@ -15,8 +15,11 @@ const Category = ({ token }) => {
   const [editingCategory, setEditingCategory] = useState(null);
   const [editingSubCategory, setEditingSubCategory] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(null);
 
   const fetchCategories = async () => {
+    setFetchLoading(true)
     try {
       const response = await axios.get(backendUrl + '/api/category/list');
       if (response.data.success) {
@@ -24,10 +27,13 @@ const Category = ({ token }) => {
       }
     } catch (error) {
       toast.error(error.message);
+    } finally {
+      setFetchLoading(false)
     }
   };
 
   const fetchSubCategories = async () => {
+    setFetchLoading(true)
     try {
       const response = await axios.get(backendUrl + '/api/subcategory/list');
       if (response.data.success) {
@@ -35,6 +41,8 @@ const Category = ({ token }) => {
       }
     } catch (error) {
       toast.error(error.message);
+    } finally {
+      setFetchLoading(false)
     }
   };
 
@@ -144,6 +152,7 @@ const Category = ({ token }) => {
   };
 
   const handleDeleteCategory = async (id) => {
+    setDeleteLoading(id)
     try {
       const response = await axios.delete(backendUrl + `/api/category/delete/${id}`, { headers: { token } });
       if (response.data.success) {
@@ -152,10 +161,13 @@ const Category = ({ token }) => {
       }
     } catch (error) {
       toast.error(error.message);
+    } finally {
+      setDeleteLoading(null)
     }
   };
 
   const handleDeleteSubCategory = async (id) => {
+    setDeleteLoading(id)
     try {
       const response = await axios.delete(backendUrl + `/api/subcategory/delete/${id}`, { headers: { token } });
       if (response.data.success) {
@@ -164,6 +176,8 @@ const Category = ({ token }) => {
       }
     } catch (error) {
       toast.error(error.message);
+    } finally {
+      setDeleteLoading(null)
     }
   };
 
@@ -262,9 +276,10 @@ const Category = ({ token }) => {
                     </button>
                     <button
                       onClick={() => handleDeleteCategory(cat._id)}
-                      className='bg-red-500 text-white px-3 py-1 text-sm'
+                      className='bg-red-500 text-white px-3 py-1 text-sm disabled:opacity-50'
+                      disabled={deleteLoading === cat._id}
                     >
-                      Delete
+                      {deleteLoading === cat._id ? 'Deleting...' : 'Delete'}
                     </button>
                   </div>
                 </div>
@@ -343,14 +358,25 @@ const Category = ({ token }) => {
                     </button>
                     <button
                       onClick={() => handleDeleteSubCategory(subCat._id)}
-                      className='bg-red-500 text-white px-3 py-1 text-sm'
+                      className='bg-red-500 text-white px-3 py-1 text-sm disabled:opacity-50'
+                      disabled={deleteLoading === subCat._id}
                     >
-                      Delete
+                      {deleteLoading === subCat._id ? 'Deleting...' : 'Delete'}
                     </button>
                   </div>
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Loading Overlay */}
+      {(fetchLoading || loading) && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+          <div className='bg-white p-6 rounded-lg flex flex-col items-center gap-3'>
+            <div className='w-12 h-12 border-4 border-gray-300 border-t-black rounded-full animate-spin'></div>
+            <p className='text-lg font-semibold'>{fetchLoading ? 'Loading Categories...' : 'Processing...'}</p>
           </div>
         </div>
       )}

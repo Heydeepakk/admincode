@@ -8,9 +8,12 @@ const List = ({ token }) => {
 
   const [list, setList] = useState([])
   const [viewProduct, setViewProduct] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(null)
   const navigate = useNavigate()
 
   const fetchList = async () => {
+    setLoading(true)
     try {
 
       const response = await axios.get(backendUrl + '/api/product/list')
@@ -24,10 +27,13 @@ const List = ({ token }) => {
     } catch (error) {
       console.log(error)
       toast.error(error.message)
+    } finally {
+      setLoading(false)
     }
   }
 
   const removeProduct = async (id) => {
+    setDeleteLoading(id)
     try {
 
       const response = await axios.post(backendUrl + '/api/product/remove', { id }, { headers: { token } })
@@ -42,6 +48,8 @@ const List = ({ token }) => {
     } catch (error) {
       console.log(error)
       toast.error(error.message)
+    } finally {
+      setDeleteLoading(null)
     }
   }
 
@@ -90,9 +98,10 @@ const List = ({ token }) => {
                 </button>
                 <button 
                   onClick={() => removeProduct(item._id)} 
-                  className='bg-red-500 text-white px-3 py-1 rounded text-xs'
+                  className='bg-red-500 text-white px-3 py-1 rounded text-xs disabled:opacity-50'
+                  disabled={deleteLoading === item._id}
                 >
-                  Delete
+                  {deleteLoading === item._id ? 'Deleting...' : 'Delete'}
                 </button>
               </div>
             </div>
@@ -100,6 +109,16 @@ const List = ({ token }) => {
         }
 
       </div>
+
+      {/* Loading Overlay */}
+      {loading && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+          <div className='bg-white p-6 rounded-lg flex flex-col items-center gap-3'>
+            <div className='w-12 h-12 border-4 border-gray-300 border-t-black rounded-full animate-spin'></div>
+            <p className='text-lg font-semibold'>Loading Products...</p>
+          </div>
+        </div>
+      )}
 
       {/* View Product Modal */}
       {viewProduct && (

@@ -12,12 +12,14 @@ const AboutUs = ({ token }) => {
   const [aboutData, setAboutData] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(false);
 
   useEffect(() => {
     fetchAboutData();
   }, []);
 
   const fetchAboutData = async () => {
+    setFetchLoading(true)
     try {
       const response = await axios.get(backendUrl + '/api/about/get');
       if (response.data.success && response.data.data) {
@@ -27,6 +29,8 @@ const AboutUs = ({ token }) => {
       }
     } catch (error) {
       console.log(error);
+    } finally {
+      setFetchLoading(false)
     }
   };
 
@@ -128,12 +132,12 @@ const AboutUs = ({ token }) => {
       </form>
 
       {/* Loader Overlay */}
-      {loading && (
+      {(fetchLoading || loading) && (
         <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
           <div className='bg-white p-6 rounded-lg flex flex-col items-center gap-3'>
             <div className='w-12 h-12 border-4 border-gray-300 border-t-black rounded-full animate-spin'></div>
-            <p className='text-lg font-semibold'>{isEditing ? 'Updating About Us...' : 'Adding About Us...'}</p>
-            <p className='text-sm text-gray-600'>Please wait while uploading content</p>
+            <p className='text-lg font-semibold'>{fetchLoading ? 'Loading About Us...' : (isEditing ? 'Updating About Us...' : 'Adding About Us...')}</p>
+            {loading && <p className='text-sm text-gray-600'>Please wait while uploading content</p>}
           </div>
         </div>
       )}

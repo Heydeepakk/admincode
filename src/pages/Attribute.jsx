@@ -14,6 +14,8 @@ const Attribute = ({ token }) => {
   const [variantValue, setVariantValue] = useState('');
   const [editingAttribute, setEditingAttribute] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(null);
   const [variantLoading, setVariantLoading] = useState(null);
 
   useEffect(() => {
@@ -33,6 +35,7 @@ const Attribute = ({ token }) => {
   }, [selectedCategory, subCategories]);
 
   const fetchAttributes = async () => {
+    setFetchLoading(true)
     try {
       const response = await axios.get(backendUrl + '/api/attribute/list');
       if (response.data.success) {
@@ -40,10 +43,13 @@ const Attribute = ({ token }) => {
       }
     } catch (error) {
       toast.error(error.message);
+    } finally {
+      setFetchLoading(false)
     }
   };
 
   const fetchCategories = async () => {
+    setFetchLoading(true)
     try {
       const response = await axios.get(backendUrl + '/api/category/list');
       if (response.data.success) {
@@ -51,10 +57,13 @@ const Attribute = ({ token }) => {
       }
     } catch (error) {
       toast.error(error.message);
+    } finally {
+      setFetchLoading(false)
     }
   };
 
   const fetchSubCategories = async () => {
+    setFetchLoading(true)
     try {
       const response = await axios.get(backendUrl + '/api/subcategory/list');
       if (response.data.success) {
@@ -62,6 +71,8 @@ const Attribute = ({ token }) => {
       }
     } catch (error) {
       toast.error(error.message);
+    } finally {
+      setFetchLoading(false)
     }
   };
 
@@ -157,6 +168,7 @@ const Attribute = ({ token }) => {
   };
 
   const handleRemoveVariant = async (attributeId, variantId) => {
+    setDeleteLoading(variantId)
     try {
       const response = await axios.delete(
         backendUrl + `/api/attribute/remove-variant/${attributeId}/${variantId}`,
@@ -168,10 +180,13 @@ const Attribute = ({ token }) => {
       }
     } catch (error) {
       toast.error(error.message);
+    } finally {
+      setDeleteLoading(null)
     }
   };
 
   const handleDeleteAttribute = async (id) => {
+    setDeleteLoading(id)
     try {
       const response = await axios.delete(backendUrl + `/api/attribute/delete/${id}`, { headers: { token } });
       if (response.data.success) {
@@ -180,6 +195,8 @@ const Attribute = ({ token }) => {
       }
     } catch (error) {
       toast.error(error.message);
+    } finally {
+      setDeleteLoading(null)
     }
   };
 
@@ -320,9 +337,10 @@ const Attribute = ({ token }) => {
                 </div>
                 <button
                   onClick={() => handleDeleteAttribute(attr._id)}
-                  className='bg-red-500 text-white px-3 py-1 text-sm'
+                  className='bg-red-500 text-white px-3 py-1 text-sm disabled:opacity-50'
+                  disabled={deleteLoading === attr._id}
                 >
-                  Delete
+                  {deleteLoading === attr._id ? 'Deleting...' : 'Delete'}
                 </button>
               </div>
 
@@ -335,9 +353,10 @@ const Attribute = ({ token }) => {
                       <span className='text-sm'>{variant.value}</span>
                       <button
                         onClick={() => handleRemoveVariant(attr._id, variant._id)}
-                        className='text-red-500 text-xs ml-1'
+                        className='text-red-500 text-xs ml-1 disabled:opacity-50'
+                        disabled={deleteLoading === variant._id}
                       >
-                        ✕
+                        {deleteLoading === variant._id ? '⏳' : '✕'}
                       </button>
                     </div>
                   ))}
@@ -374,6 +393,16 @@ const Attribute = ({ token }) => {
           ))}
         </div>
       </div>
+
+      {/* Loading Overlay */}
+      {(fetchLoading || loading) && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+          <div className='bg-white p-6 rounded-lg flex flex-col items-center gap-3'>
+            <div className='w-12 h-12 border-4 border-gray-300 border-t-black rounded-full animate-spin'></div>
+            <p className='text-lg font-semibold'>{fetchLoading ? 'Loading Attributes...' : 'Processing...'}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

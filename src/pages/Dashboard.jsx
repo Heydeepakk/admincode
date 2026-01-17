@@ -12,12 +12,14 @@ const Dashboard = ({ token }) => {
     totalCategories: 0,
     recentOrders: []
   });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchStats();
   }, []);
 
   const fetchStats = async () => {
+    setLoading(true)
     try {
       console.log('Fetching stats from APIs...');
       
@@ -58,6 +60,8 @@ const Dashboard = ({ token }) => {
         totalCategories: 0,
         recentOrders: []
       });
+    } finally {
+      setLoading(false)
     }
   };
 
@@ -161,6 +165,17 @@ const Dashboard = ({ token }) => {
           </div>
         </div>
       </div>
+
+      {/* Loading Overlay */}
+      {loading && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+          <div className='bg-white p-6 rounded-lg flex flex-col items-center gap-3'>
+            <div className='w-12 h-12 border-4 border-gray-300 border-t-black rounded-full animate-spin'></div>
+            <p className='text-lg font-semibold'>Loading Dashboard...</p>
+            <p className='text-sm text-gray-600'>Fetching statistics and data</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

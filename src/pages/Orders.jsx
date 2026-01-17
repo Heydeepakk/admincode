@@ -9,6 +9,8 @@ import { assets } from '../assets/assets'
 const Orders = ({ token }) => {
 
   const [orders, setOrders] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [statusLoading, setStatusLoading] = useState(null)
 
   const fetchAllOrders = async () => {
 
@@ -16,6 +18,7 @@ const Orders = ({ token }) => {
       return null;
     }
 
+    setLoading(true)
     try {
 
       const response = await axios.post(backendUrl + '/api/order/list', {}, { headers: { token } })
@@ -27,12 +30,15 @@ const Orders = ({ token }) => {
 
     } catch (error) {
       toast.error(error.message)
+    } finally {
+      setLoading(false)
     }
 
 
   }
 
   const statusHandler = async ( event, orderId ) => {
+    setStatusLoading(orderId)
     try {
       const response = await axios.post(backendUrl + '/api/order/status' , {orderId, status:event.target.value}, { headers: {token}})
       if (response.data.success) {
@@ -41,6 +47,8 @@ const Orders = ({ token }) => {
     } catch (error) {
       console.log(error)
       toast.error(response.data.message)
+    } finally {
+      setStatusLoading(null)
     }
   }
 
@@ -81,17 +89,30 @@ const Orders = ({ token }) => {
                 <p>Date : {new Date(order.date).toLocaleDateString()}</p>
               </div>
               <p className='text-sm sm:text-[15px]'>{currency}{order.amount}</p>
-              <select onChange={(event)=>statusHandler(event,order._id)} value={order.status} className='p-2 font-semibold'>
+              <select onChange={(event)=>statusHandler(event,order._id)} value={order.status} className='p-2 font-semibold' disabled={statusLoading === order._id}>
                 <option value="Order Placed">Order Placed</option>
                 <option value="Packing">Packing</option>
                 <option value="Shipped">Shipped</option>
                 <option value="Out for delivery">Out for delivery</option>
                 <option value="Delivered">Delivered</option>
               </select>
+              {statusLoading === order._id && (
+                <div className='text-xs text-blue-600 mt-1'>Updating...</div>
+              )}
             </div>
           ))
         }
       </div>
+
+      {/* Loading Overlay */}
+      {loading && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+          <div className='bg-white p-6 rounded-lg flex flex-col items-center gap-3'>
+            <div className='w-12 h-12 border-4 border-gray-300 border-t-black rounded-full animate-spin'></div>
+            <p className='text-lg font-semibold'>Loading Orders...</p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
