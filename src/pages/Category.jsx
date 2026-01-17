@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import { backendUrl } from '../App'
 import { toast } from 'react-toastify'
+import { assets } from '../assets/assets'
 
 const Category = ({ token }) => {
   const [activeTab, setActiveTab] = useState('category')
@@ -9,6 +10,7 @@ const Category = ({ token }) => {
   const [subCategories, setSubCategories] = useState([]);
   const [categoryName, setCategoryName] = useState('');
   const [categoryDesc, setCategoryDesc] = useState('');
+  const [categoryImage, setCategoryImage] = useState(null);
   const [subCategoryName, setSubCategoryName] = useState('');
   const [subCategoryDesc, setSubCategoryDesc] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -55,15 +57,23 @@ const Category = ({ token }) => {
     e.preventDefault();
     setLoading(true);
     try {
+      const formData = new FormData();
+      formData.append('name', categoryName);
+      formData.append('description', categoryDesc);
+      if (categoryImage) {
+        formData.append('image', categoryImage);
+      }
+      
       const response = await axios.post(
         backendUrl + '/api/category/create',
-        { name: categoryName, description: categoryDesc },
+        formData,
         { headers: { token } }
       );
       if (response.data.success) {
         toast.success(response.data.message);
         setCategoryName('');
         setCategoryDesc('');
+        setCategoryImage(null);
         fetchCategories();
       } else {
         toast.error(response.data.message);
@@ -79,15 +89,23 @@ const Category = ({ token }) => {
     e.preventDefault();
     setLoading(true);
     try {
+      const formData = new FormData();
+      formData.append('name', categoryName);
+      formData.append('description', categoryDesc);
+      if (categoryImage) {
+        formData.append('image', categoryImage);
+      }
+      
       const response = await axios.put(
         backendUrl + `/api/category/update/${editingCategory._id}`,
-        { name: categoryName, description: categoryDesc },
+        formData,
         { headers: { token } }
       );
       if (response.data.success) {
         toast.success(response.data.message);
         setCategoryName('');
         setCategoryDesc('');
+        setCategoryImage(null);
         setEditingCategory(null);
         fetchCategories();
       } else {
@@ -185,6 +203,7 @@ const Category = ({ token }) => {
     setEditingCategory(cat);
     setCategoryName(cat.name);
     setCategoryDesc(cat.description || '');
+    setCategoryImage(null);
   };
 
   const startEditSubCategory = (subCat) => {
@@ -199,6 +218,7 @@ const Category = ({ token }) => {
     setEditingSubCategory(null);
     setCategoryName('');
     setCategoryDesc('');
+    setCategoryImage(null);
     setSubCategoryName('');
     setSubCategoryDesc('');
     setSelectedCategory('');
@@ -244,6 +264,23 @@ const Category = ({ token }) => {
                 onChange={(e) => setCategoryDesc(e.target.value)}
                 className='px-3 py-2 border'
               />
+              <div className='flex flex-col gap-2'>
+                <label className='text-sm font-medium'>Category Image</label>
+                <label htmlFor='categoryImage' className='cursor-pointer'>
+                  <img 
+                    src={categoryImage ? URL.createObjectURL(categoryImage) : assets.upload_area} 
+                    alt='Upload' 
+                    className='w-20 h-20 object-cover border-2 border-dashed border-gray-300'
+                  />
+                </label>
+                <input 
+                  type='file' 
+                  id='categoryImage' 
+                  hidden 
+                  accept='image/*'
+                  onChange={(e) => setCategoryImage(e.target.files[0])}
+                />
+              </div>
               <div className='flex gap-2'>
                 <button type='submit' disabled={loading} className='bg-black text-white px-4 py-2 flex-1 disabled:opacity-50 disabled:cursor-not-allowed'>
                   {loading ? '⏳ Processing...' : editingCategory ? 'Update' : 'Add'}
@@ -263,9 +300,14 @@ const Category = ({ token }) => {
             <div className='grid gap-2'>
               {categories.map((cat) => (
                 <div key={cat._id} className='flex justify-between items-center border p-3 bg-white'>
-                  <div>
-                    <p className='font-medium'>{cat.name}</p>
-                    <p className='text-sm text-gray-500'>{cat.description}</p>
+                  <div className='flex items-center gap-3'>
+                    {cat.image && (
+                      <img src={cat.image} alt={cat.name} className='w-12 h-12 object-cover rounded' />
+                    )}
+                    <div>
+                      <p className='font-medium'>{cat.name}</p>
+                      <p className='text-sm text-gray-500'>{cat.description}</p>
+                    </div>
                   </div>
                   <div className='flex gap-2'>
                     <button
