@@ -26,6 +26,7 @@ const Add = ({token}) => {
    const [attributes, setAttributes] = useState([]);
    const [variants, setVariants] = useState([]);
    const [loading, setLoading] = useState(false);
+   const [seo, setSeo] = useState({ metaTitle: '', metaDescription: '', metaKeywords: '', slug: '', canonicalUrl: '', ogImage: '' });
 
    useEffect(() => {
      fetchCategories();
@@ -142,6 +143,7 @@ const Add = ({token}) => {
       formData.append("bestseller",bestseller)
       formData.append("sizes",JSON.stringify(sizes))
       formData.append("variants",JSON.stringify(variants))
+      formData.append("seo",JSON.stringify(seo))
 
       image1 && formData.append("image1",image1)
       image2 && formData.append("image2",image2)
@@ -163,6 +165,7 @@ const Add = ({token}) => {
         setSubCategory('')
         setSizes([])
         setVariants([])
+        setSeo({ metaTitle: '', metaDescription: '', metaKeywords: '', slug: '', canonicalUrl: '', ogImage: '' })
       } else {
         toast.error(response.data.message)
       }
@@ -342,6 +345,41 @@ const Add = ({token}) => {
         <div className='flex gap-2 mt-2'>
           <input onChange={() => setBestseller(prev => !prev)} checked={bestseller} type="checkbox" id='bestseller' />
           <label className='cursor-pointer' htmlFor="bestseller">Add to bestseller</label>
+        </div>
+
+        {/* SEO Section */}
+        <div className='w-full mt-6 border rounded p-4 bg-gray-50'>
+          <p className='text-lg font-semibold mb-1'>SEO Settings</p>
+          <p className='text-xs text-gray-500 mb-4'>These fields help your product appear in Google search results.</p>
+          <div className='flex flex-col gap-3'>
+            <div>
+              <label className='text-sm font-medium block mb-1'>Meta Title <span className='text-gray-400 font-normal'>(blue link in Google — max 60 chars)</span></label>
+              <input value={seo.metaTitle} onChange={e => setSeo(p => ({...p, metaTitle: e.target.value}))} maxLength={60}
+                className='w-full max-w-[600px] px-3 py-2 border text-sm' placeholder='e.g. Buy Gold Ring Online | Krivante' />
+              <p className='text-xs text-gray-400 mt-0.5'>{seo.metaTitle.length}/60</p>
+            </div>
+            <div>
+              <label className='text-sm font-medium block mb-1'>Meta Description <span className='text-gray-400 font-normal'>(snippet below title in Google — max 160 chars)</span></label>
+              <textarea value={seo.metaDescription} onChange={e => setSeo(p => ({...p, metaDescription: e.target.value}))} maxLength={160} rows={3}
+                className='w-full max-w-[600px] px-3 py-2 border text-sm resize-none' placeholder='e.g. Shop this beautiful gold ring at Krivante. Fast delivery, easy returns.' />
+              <p className='text-xs text-gray-400 mt-0.5'>{seo.metaDescription.length}/160</p>
+            </div>
+            <div>
+              <label className='text-sm font-medium block mb-1'>Meta Keywords <span className='text-gray-400 font-normal'>(comma separated)</span></label>
+              <input value={seo.metaKeywords} onChange={e => setSeo(p => ({...p, metaKeywords: e.target.value}))}
+                className='w-full max-w-[600px] px-3 py-2 border text-sm' placeholder='gold ring, buy ring online, krivante ring' />
+            </div>
+            <div>
+              <label className='text-sm font-medium block mb-1'>URL Slug <span className='text-gray-400 font-normal'>(e.g. gold-ring-18k — used in canonical URL)</span></label>
+              <input value={seo.slug} onChange={e => setSeo(p => ({...p, slug: e.target.value.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'')}))} 
+                className='w-full max-w-[600px] px-3 py-2 border text-sm' placeholder='gold-ring-18k' />
+            </div>
+            <div>
+              <label className='text-sm font-medium block mb-1'>OG Image URL <span className='text-gray-400 font-normal'>(image shown on WhatsApp/Facebook share)</span></label>
+              <input value={seo.ogImage} onChange={e => setSeo(p => ({...p, ogImage: e.target.value}))}
+                className='w-full max-w-[600px] px-3 py-2 border text-sm' placeholder='https://...' />
+            </div>
+          </div>
         </div>
 
         <button type="submit" className='w-28 py-3 mt-4 bg-black text-white' disabled={loading}>
