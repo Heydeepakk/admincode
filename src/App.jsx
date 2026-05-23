@@ -11,6 +11,7 @@ import Edit from './pages/Edit'
 import Header from './pages/Header'
 import Banner from './pages/Banner'
 import AboutUs from './pages/AboutUs'
+import DeliveryCharges from './pages/DeliveryCharges'
 import Dashboard from './pages/Dashboard'
 import Login from './components/Login'
 import { ToastContainer } from 'react-toastify';
@@ -49,6 +50,7 @@ const App = () => {
                 <Route path='/header' element={<Header token={token} />} />
                 <Route path='/banner' element={<Banner token={token} />} />
                 <Route path='/about' element={<AboutUs token={token} />} />
+                <Route path='/delivery-charges' element={<DeliveryCharges token={token} />} />
               </Routes>
             </div>
           </div>
