@@ -127,30 +127,42 @@ const Add = ({token}) => {
      setVariants(updated);
    };
 
+   const CLOUDINARY_CLOUD = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
+   const CLOUDINARY_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
+
+   const uploadToCloudinary = async (file) => {
+     const data = new FormData()
+     data.append('file', file)
+     data.append('upload_preset', CLOUDINARY_PRESET)
+     const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method: 'POST', body: data })
+     const json = await res.json()
+     if (!json.secure_url) throw new Error('Image upload failed')
+     return json.secure_url
+   }
+
    const onSubmitHandler = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      
+      const imageFiles = [image1, image2, image3, image4].filter(Boolean)
+      if (imageFiles.length === 0) { toast.error('Please upload at least one image'); setLoading(false); return }
+
+      const imageUrls = await Promise.all(imageFiles.map(uploadToCloudinary))
+
       const formData = new FormData()
+      formData.append("name", name)
+      formData.append("description", description)
+      formData.append("price", price)
+      formData.append("category", category)
+      formData.append("subCategory", subCategory)
+      formData.append("bestseller", bestseller)
+      formData.append("sizes", JSON.stringify(sizes))
+      formData.append("variants", JSON.stringify(variants))
+      formData.append("seo", JSON.stringify(seo))
+      formData.append("imageUrls", JSON.stringify(imageUrls))
 
-      formData.append("name",name)
-      formData.append("description",description)
-      formData.append("price",price)
-      formData.append("category",category)
-      formData.append("subCategory",subCategory)
-      formData.append("bestseller",bestseller)
-      formData.append("sizes",JSON.stringify(sizes))
-      formData.append("variants",JSON.stringify(variants))
-      formData.append("seo",JSON.stringify(seo))
-
-      image1 && formData.append("image1",image1)
-      image2 && formData.append("image2",image2)
-      image3 && formData.append("image3",image3)
-      image4 && formData.append("image4",image4)
-
-      const response = await axios.post(backendUrl + "/api/product/add",formData,{headers:{token}})
+      const response = await axios.post(backendUrl + "/api/product/add", formData, { headers: { token } })
 
       if (response.data.success) {
         toast.success(response.data.message)
