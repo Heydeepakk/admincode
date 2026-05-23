@@ -81,6 +81,8 @@ const DeliveryCharges = ({ token }) => {
       if (response.data.success) {
         toast.success(response.data.message)
         fetchDeliveryCharges()
+      } else {
+        toast.error(response.data.message)
       }
     } catch (error) {
       toast.error(error.message)
