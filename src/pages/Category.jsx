@@ -210,7 +210,7 @@ const Category = ({ token }) => {
     setEditingSubCategory(subCat);
     setSubCategoryName(subCat.name);
     setSubCategoryDesc(subCat.description || '');
-    setSelectedCategory(subCat.categoryId._id);
+    setSelectedCategory(subCat?.categoryId?._id || subCat?.categoryId || '');
   };
 
   const cancelEdit = () => {

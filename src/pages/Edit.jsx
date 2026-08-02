@@ -39,8 +39,13 @@ const Edit = ({ token }) => {
 
   useEffect(() => {
     if (category) {
-      const filtered = subCategories.filter((sub) => sub.categoryId._id === category);
-      setFilteredSubCategories(filtered);
+      const filtered = subCategories.filter((sub) => {
+        const catId = sub?.categoryId?._id || sub?.categoryId
+        return catId && String(catId) === String(category)
+      })
+      setFilteredSubCategories(filtered)
+    } else {
+      setFilteredSubCategories([])
     }
   }, [category, subCategories]);
 
@@ -53,8 +58,8 @@ const Edit = ({ token }) => {
         setName(product.name);
         setDescription(product.description);
         setPrice(product.price);
-        setCategory(product.category._id);
-        setSubCategory(product.subCategory._id);
+        setCategory(product.category?._id || product.category || '');
+        setSubCategory(product.subCategory?._id || product.subCategory || '');
         setBestseller(product.bestseller);
         setVariants(product.variants || []);
         setExistingImages(product.image);

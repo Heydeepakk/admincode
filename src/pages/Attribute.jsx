@@ -26,11 +26,14 @@ const Attribute = ({ token }) => {
 
   useEffect(() => {
     if (selectedCategory) {
-      const filtered = subCategories.filter(sub => sub.categoryId._id === selectedCategory);
-      setFilteredSubCategories(filtered);
-      setSelectedSubCategory('');
+      const filtered = subCategories.filter(sub => {
+        const catId = sub?.categoryId?._id || sub?.categoryId
+        return catId && String(catId) === String(selectedCategory)
+      })
+      setFilteredSubCategories(filtered)
+      setSelectedSubCategory('')
     } else {
-      setFilteredSubCategories([]);
+      setFilteredSubCategories([])
     }
   }, [selectedCategory, subCategories]);
 

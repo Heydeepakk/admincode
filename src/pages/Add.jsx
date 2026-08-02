@@ -36,9 +36,15 @@ const Add = ({token}) => {
 
    useEffect(() => {
      if (category) {
-       const filtered = subCategories.filter(sub => sub.categoryId._id === category);
-       setFilteredSubCategories(filtered);
-       setSubCategory('');
+       const filtered = subCategories.filter(sub => {
+         const catId = sub?.categoryId?._id || sub?.categoryId
+         return catId && String(catId) === String(category)
+       })
+       setFilteredSubCategories(filtered)
+       setSubCategory('')
+     } else {
+       setFilteredSubCategories([])
+       setSubCategory('')
      }
    }, [category, subCategories]);
 
@@ -99,14 +105,14 @@ const Add = ({token}) => {
          return;
        }
        
-       const attr = subCategoryAttributes[index];
-       for (const variant of attr.variants) {
-         generate(index + 1, [...current, {
-           attributeId: attr._id,
-           attributeName: attr.name,
-           variantValue: variant.value
-         }]);
-       }
+      const attr = subCategoryAttributes[index];
+      for (const variant of (attr.variants || [])) {
+        generate(index + 1, [...current, {
+          attributeId: attr._id,
+          attributeName: attr.name,
+          variantValue: variant.value
+        }]);
+      }
      };
      
      generate(0, []);
