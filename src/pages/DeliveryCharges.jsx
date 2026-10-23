@@ -107,9 +107,9 @@ const DeliveryCharges = ({ token }) => {
     <div className='flex flex-col gap-6'>
       <h1 className='text-2xl font-bold'>Delivery Charges</h1>
 
-      <div className='flex gap-8'>
+      <div className='flex flex-col lg:flex-row gap-8'>
         {/* Form */}
-        <div className='w-1/3'>
+        <div className='w-full lg:w-1/3'>
           <h2 className='text-xl font-semibold mb-4'>
             {editingId ? 'Edit Delivery Charge' : 'Add Delivery Charge'}
           </h2>

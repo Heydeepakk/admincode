@@ -3,6 +3,7 @@ import axios from 'axios'
 import { backendUrl } from '../App'
 import { toast } from 'react-toastify'
 import { assets } from '../assets/assets'
+import { HANGERS, hangerOf } from '../utils/hangers'
 
 const Category = ({ token }) => {
   const [activeTab, setActiveTab] = useState('category')
@@ -11,6 +12,7 @@ const Category = ({ token }) => {
   const [categoryName, setCategoryName] = useState('');
   const [categoryDesc, setCategoryDesc] = useState('');
   const [categoryImage, setCategoryImage] = useState(null);
+  const [hangerStyle, setHangerStyle] = useState('auto');
   const [subCategoryName, setSubCategoryName] = useState('');
   const [subCategoryDesc, setSubCategoryDesc] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -60,6 +62,7 @@ const Category = ({ token }) => {
       const formData = new FormData();
       formData.append('name', categoryName);
       formData.append('description', categoryDesc);
+      formData.append('hangerStyle', hangerStyle);
       if (categoryImage) {
         formData.append('image', categoryImage);
       }
@@ -74,6 +77,7 @@ const Category = ({ token }) => {
         setCategoryName('');
         setCategoryDesc('');
         setCategoryImage(null);
+        setHangerStyle('auto');
         fetchCategories();
       } else {
         toast.error(response.data.message);
@@ -92,6 +96,7 @@ const Category = ({ token }) => {
       const formData = new FormData();
       formData.append('name', categoryName);
       formData.append('description', categoryDesc);
+      formData.append('hangerStyle', hangerStyle);
       if (categoryImage) {
         formData.append('image', categoryImage);
       }
@@ -106,6 +111,7 @@ const Category = ({ token }) => {
         setCategoryName('');
         setCategoryDesc('');
         setCategoryImage(null);
+        setHangerStyle('auto');
         setEditingCategory(null);
         fetchCategories();
       } else {
@@ -204,6 +210,7 @@ const Category = ({ token }) => {
     setCategoryName(cat.name);
     setCategoryDesc(cat.description || '');
     setCategoryImage(null);
+    setHangerStyle(cat.hangerStyle || 'auto');
   };
 
   const startEditSubCategory = (subCat) => {
@@ -219,6 +226,7 @@ const Category = ({ token }) => {
     setCategoryName('');
     setCategoryDesc('');
     setCategoryImage(null);
+    setHangerStyle('auto');
     setSubCategoryName('');
     setSubCategoryDesc('');
     setSelectedCategory('');
@@ -227,16 +235,16 @@ const Category = ({ token }) => {
   return (
     <div className='flex flex-col gap-6'>
       {/* Tabs */}
-      <div className='flex gap-4 border-b'>
+      <div className='flex gap-2 sm:gap-4 border-b overflow-x-auto'>
         <button
           onClick={() => setActiveTab('category')}
-          className={`px-6 py-3 font-medium ${activeTab === 'category' ? 'border-b-2 border-black text-black' : 'text-gray-500'}`}
+          className={`px-4 sm:px-6 py-3 font-medium whitespace-nowrap ${activeTab === 'category' ? 'border-b-2 border-black text-black' : 'text-gray-500'}`}
         >
           Categories
         </button>
         <button
           onClick={() => setActiveTab('subcategory')}
-          className={`px-6 py-3 font-medium ${activeTab === 'subcategory' ? 'border-b-2 border-black text-black' : 'text-gray-500'}`}
+          className={`px-4 sm:px-6 py-3 font-medium whitespace-nowrap ${activeTab === 'subcategory' ? 'border-b-2 border-black text-black' : 'text-gray-500'}`}
         >
           SubCategories
         </button>
@@ -244,9 +252,9 @@ const Category = ({ token }) => {
 
       {/* Category Tab */}
       {activeTab === 'category' && (
-        <div className='flex gap-8'>
+        <div className='flex flex-col lg:flex-row gap-8'>
           {/* Form */}
-          <div className='w-1/3'>
+          <div className='w-full lg:w-1/3'>
             <h2 className='text-xl font-semibold mb-4'>{editingCategory ? 'Edit Category' : 'Add Category'}</h2>
             <form onSubmit={editingCategory ? handleUpdateCategory : handleAddCategory} className='flex flex-col gap-3'>
               <input
@@ -254,7 +262,7 @@ const Category = ({ token }) => {
                 placeholder='Category Name'
                 value={categoryName}
                 onChange={(e) => setCategoryName(e.target.value)}
-                className='px-3 py-2 border'
+                className='px-3 py-2.5 border text-base sm:text-sm'
                 required
               />
               <input
@@ -262,8 +270,24 @@ const Category = ({ token }) => {
                 placeholder='Description (optional)'
                 value={categoryDesc}
                 onChange={(e) => setCategoryDesc(e.target.value)}
-                className='px-3 py-2 border'
+                className='px-3 py-2.5 border text-base sm:text-sm'
               />
+              <div className='flex flex-col gap-2'>
+                <label className='text-sm font-medium'>Which rack / hanger?</label>
+                <div className='grid grid-cols-2 gap-2'>
+                  {Object.entries(HANGERS).map(([key, h]) => (
+                    <button type='button' key={key} onClick={() => setHangerStyle(key)}
+                      className={`flex flex-col items-start gap-0.5 p-3 rounded-xl border text-left transition-colors ${(hangerStyle === key || (hangerStyle === 'auto' && hangerOf({ name: categoryName }) === key && categoryName)) ? 'border-black bg-gray-50' : 'border-gray-200 bg-white hover:border-gray-400'}`}>
+                      <span className='text-xl'>{h.icon}</span>
+                      <span className='text-sm font-semibold text-gray-800'>{h.rack}</span>
+                      <span className='text-[11px] text-gray-500'>{h.label}</span>
+                    </button>
+                  ))}
+                </div>
+                <p className='text-xs text-gray-500'>
+                  {hangerStyle === 'auto' ? 'Not chosen: guessed from the name.' : 'Products in this category hang on this rack.'}
+                </p>
+              </div>
               <div className='flex flex-col gap-2'>
                 <label className='text-sm font-medium'>Category Image</label>
                 <label htmlFor='categoryImage' className='cursor-pointer'>
@@ -299,13 +323,14 @@ const Category = ({ token }) => {
             <h2 className='text-xl font-semibold mb-4'>Category List</h2>
             <div className='grid gap-2'>
               {categories.map((cat) => (
-                <div key={cat._id} className='flex justify-between items-center border p-3 bg-white'>
+                <div key={cat._id} className='flex flex-wrap gap-3 justify-between items-center border p-3 bg-white rounded-xl'>
                   <div className='flex items-center gap-3'>
                     {cat.image && (
                       <img src={cat.image} alt={cat.name} className='w-12 h-12 object-cover rounded' />
                     )}
                     <div>
                       <p className='font-medium'>{cat.name}</p>
+                      <p className='text-xs text-gray-500'>{HANGERS[hangerOf(cat)].icon} {HANGERS[hangerOf(cat)].rack} rack</p>
                       <p className='text-sm text-gray-500'>{cat.description}</p>
                     </div>
                   </div>
@@ -333,15 +358,15 @@ const Category = ({ token }) => {
 
       {/* SubCategory Tab */}
       {activeTab === 'subcategory' && (
-        <div className='flex gap-8'>
+        <div className='flex flex-col lg:flex-row gap-8'>
           {/* Form */}
-          <div className='w-1/3'>
+          <div className='w-full lg:w-1/3'>
             <h2 className='text-xl font-semibold mb-4'>{editingSubCategory ? 'Edit SubCategory' : 'Add SubCategory'}</h2>
             <form onSubmit={editingSubCategory ? handleUpdateSubCategory : handleAddSubCategory} className='flex flex-col gap-3'>
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className='px-3 py-2 border'
+                className='px-3 py-2.5 border text-base sm:text-sm'
                 required
               >
                 <option value=''>Select Category</option>
@@ -356,7 +381,7 @@ const Category = ({ token }) => {
                 placeholder='SubCategory Name'
                 value={subCategoryName}
                 onChange={(e) => setSubCategoryName(e.target.value)}
-                className='px-3 py-2 border'
+                className='px-3 py-2.5 border text-base sm:text-sm'
                 required
               />
               <input
@@ -364,7 +389,7 @@ const Category = ({ token }) => {
                 placeholder='Description (optional)'
                 value={subCategoryDesc}
                 onChange={(e) => setSubCategoryDesc(e.target.value)}
-                className='px-3 py-2 border'
+                className='px-3 py-2.5 border text-base sm:text-sm'
               />
               <div className='flex gap-2'>
                 <button type='submit' disabled={loading} className='bg-black text-white px-4 py-2 flex-1 disabled:opacity-50 disabled:cursor-not-allowed'>
@@ -384,7 +409,7 @@ const Category = ({ token }) => {
             <h2 className='text-xl font-semibold mb-4'>SubCategory List</h2>
             <div className='grid gap-2'>
               {subCategories.map((subCat) => (
-                <div key={subCat._id} className='flex justify-between items-center border p-3 bg-white'>
+                <div key={subCat._id} className='flex flex-wrap gap-3 justify-between items-center border p-3 bg-white rounded-xl'>
                   <div>
                     <p className='font-medium'>{subCat.name}</p>
                     <p className='text-sm text-gray-500'>

@@ -154,7 +154,7 @@ const Orders = ({ token }) => {
                   <div className='mt-2 flex flex-wrap gap-1'>
                     {order.items.map((item, i) => (
                       <span key={i} className='bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full'>
-                        {item.name} × {item.quantity} {item.size && `(${item.size})`}
+                        {item.name} × {item.quantity} {item.size && item.size !== '0' && `(${item.size})`}
                       </span>
                     ))}
                   </div>
