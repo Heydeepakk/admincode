@@ -6,7 +6,6 @@ import Add from './pages/Add'
 import List from './pages/List'
 import Orders from './pages/Orders'
 import Category from './pages/Category'
-import Attribute from './pages/Attribute'
 import Edit from './pages/Edit'
 import Header from './pages/Header'
 import Banner from './pages/Banner'
@@ -23,6 +22,7 @@ export const currency = '₹'
 const App = () => {
 
   const [token, setToken] = useState(localStorage.getItem('token')?localStorage.getItem('token'):'');
+  const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(()=>{
     localStorage.setItem('token',token)
@@ -34,11 +34,10 @@ const App = () => {
       {token === ""
         ? <Login setToken={setToken} />
         : <>
-          <Navbar setToken={setToken} />
-          <hr />
+          <Navbar setToken={setToken} onMenu={() => setMenuOpen(true)} />
           <div className='flex w-full'>
-            <Sidebar />
-            <div className='w-[70%] mx-auto ml-[max(5vw,25px)] my-8 text-gray-600 text-base'>
+            <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
+            <div className='flex-1 min-w-0 px-4 sm:px-8 py-6 sm:py-8 text-gray-600 text-base'>
               <Routes>
                 <Route path='/' element={<Dashboard token={token} />} />
                 <Route path='/add' element={<Add token={token} />} />
@@ -46,7 +45,6 @@ const App = () => {
                 <Route path='/edit/:id' element={<Edit token={token} />} />
                 <Route path='/orders' element={<Orders token={token} />} />
                 <Route path='/category' element={<Category token={token} />} />
-                <Route path='/attribute' element={<Attribute token={token} />} />
                 <Route path='/header' element={<Header token={token} />} />
                 <Route path='/banner' element={<Banner token={token} />} />
                 <Route path='/about' element={<AboutUs token={token} />} />
